@@ -111,19 +111,44 @@ def network_scan(host, start_port, end_port):
     return open_ports
 
 
+def exec_command_in_server(client, command):
+    # to prepare server for execute command,
+    # client send message "exec" before send command
+    send_message(client, "exec")
+
+    # send command to server
+    send_message(client, command)
+    receive_data(client)
+
+
+# for command "mkdir test1 test2"
+# we have ["mkdir", "test1", "test2"]
+# this function refactoring to "mkdir test1 test2"
+def refactoring_command(arr):
+    command = ""
+    for i in range(2, len(arr)):
+        command += " " + arr[i]
+
+    return command
+
+
 if __name__ == "__main__":
     # print(network_scan("google.com", 80, 150))
     host, port = get_host_port(sys.argv)
     s = connect_to_remote_host(host, port)
     client_input = input()
     client_input_arr = client_input.split(" ")
+    print(client_input_arr)
 
     if client_input_arr[0] == "telnet" and client_input_arr[1] == "upload":
         file_path = client_input_arr[2]
         upload_file(s, file_path)
 
     if client_input_arr[0] == "telnet" and client_input_arr[1] == "exec":
-        command = client_input_arr[2]
+        command = refactoring_command(client_input_arr)
+        print("*********************")
+        print(command)
+        exec_command_in_server(command)
 
     # exit()
     # print(command)

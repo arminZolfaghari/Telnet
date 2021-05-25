@@ -18,7 +18,6 @@ def connect_to_remote_host(host, port):
     try:
         created_socket.connect((host, port))
     except:
-        return False
         print("Error: Unable to connect")
         sys.exit()
 
@@ -40,24 +39,26 @@ def send_payload(client, payload_type, payload):
                 data_in_chunk = file.read(SIZE)
                 if not data_in_chunk:
                     break
-                send_payload(socket, "data", data_in_chunk)
+                send_payload(client, "data", data_in_chunk)
     else:
-        message = payload.encode(ENCODING)
-        message_length = len(message)
-        message_length = str(message_length).encode(ENCODING)
-        message_length += b' ' * (MESSAGE_LENGTH_SIZE - len(message_length))
-
-        print(message_length)
-        print(message)
-        client.send(message_length)
-        client.send(message)
+        print(111111111)
+        client.sendall(payload.encode())
+        # message = payload.encode(ENCODING)
+        # message_length = len(message)
+        # message_length = str(message_length).encode(ENCODING)
+        # message_length += b' ' * (MESSAGE_LENGTH_SIZE - len(message_length))
+        #
+        # print(message_length)
+        # print(message)
+        # client.send(message_length)
+        # client.send(message)
 
 
 def receive_data(socket):
     chunks_arr = bytearray()
 
     while 1:
-        readable = select.select([socket], [], [], 5)
+        readable = select.select([socket], [], [], 2)
         if readable[0]:
             chunks_arr.extend(socket.recv(SIZE))
         else:
@@ -76,7 +77,6 @@ def network_scan(host, start_port, end_port):
             print(port)
             open_ports.append("{}:{}".format(host, port))
             s.close()
-
 
     return open_ports
 
@@ -104,13 +104,15 @@ def network_scan(host, start_port, end_port):
 
 
 if __name__ == "__main__":
-    print(network_scan("google.com", 80, 150))
-    # host, port = get_host_port(sys.argv)
-    #
-    # s = connect_to_remote_host(host, port)
-    # # command = input()
-    # # print(command)
-    # # exit()
-    # data = "GET / HTTP/1.1\n\n"
-    # send_payload(s, "orrr", data)
-    # print(receive_data(s))
+    # print(network_scan("google.com", 80, 150))
+    host, port = get_host_port(sys.argv)
+
+    s = connect_to_remote_host(host, port)
+    command = input()
+    print(command)
+    command += "\n\n"
+    data = "GET / HTTP/1.1\nHost: google.com\n\n"
+    if data == str(command):
+        print("the same")
+    send_payload(s, "orrr", command)
+    print(receive_data(s))

@@ -4,6 +4,7 @@ SIZE = 1024
 ENCODING = 'utf-8'
 MESSAGE_LENGTH_SIZE = 64
 
+
 def get_host_port(arr):
     host = arr[1]
     port = int(arr[2])
@@ -13,7 +14,6 @@ def get_host_port(arr):
 def connect_to_remote_host(host, port):
     created_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     created_socket.settimeout(1)
-
 
     try:
         created_socket.connect((host, port))
@@ -32,26 +32,56 @@ def close_connection(socket):
         socket.close()
 
 
+def send_message(client, message):
+    message = message.encode()
+    message_length = len(message)
+    message_length = str(message_length).encode()
+    message_length += b' ' * (MESSAGE_LENGTH_SIZE - len(message_length))
+
+    client.sendall(message_length)
+    client.sendall(message)
+
+
+def upload_file(client, path):
+    # to prepare server for receive file,
+    # client send message "upload" before upload file
+    send_message(client, "upload")
+
+    # send file name to server
+    file_name = path.split('/')[-1]
+    send_message(client, file_name)
+
+    with open(path, 'rb') as file:
+        payload_encode = file.read()
+        payload_length = len(payload_encode)
+        payload_length = str(payload_length).encode()
+        payload_length += b' ' * (MESSAGE_LENGTH_SIZE - len(payload_length))
+
+        client.sendall(payload_length)
+        client.sendall(payload_encode)
+
+
 def send_payload(client, payload_type, payload):
     if payload_type == "file":
         with open(payload, 'rb') as file:
-            while 1:
-                data_in_chunk = file.read(SIZE)
-                if not data_in_chunk:
-                    break
-                send_payload(client, "data", data_in_chunk)
+            data = file.read()
+            # while 1:
+            #     data_in_chunk = file.read(SIZE)
+            #     if not data_in_chunk:
+            #         break
+            #     send_payload(client, "data", data_in_chunk)
     else:
         print(111111111)
         client.sendall(payload.encode())
-        # message = payload.encode(ENCODING)
+        # message = payload.encode()
         # message_length = len(message)
-        # message_length = str(message_length).encode(ENCODING)
+        # message_length = str(message_length).encode()
         # message_length += b' ' * (MESSAGE_LENGTH_SIZE - len(message_length))
         #
         # print(message_length)
         # print(message)
-        # client.send(message_length)
-        # client.send(message)
+        # client.sendall(message_length)
+        # client.sendall(message)
 
 
 def receive_data(socket):
@@ -80,39 +110,29 @@ def network_scan(host, start_port, end_port):
 
     return open_ports
 
-# def message(socket):
-#     while 1:
-#         socket_list = [sys.stdin, socket]
-#         # Get the list sockets which are readable
-#         read_sockets, write_sockets, error_sockets = select.select(socket_list, [], [])
-#
-#         for sock in read_sockets:
-#             # incoming message from remote server
-#             if sock == socket:
-#                 data = sock.recv(4096)
-#                 if not data:
-#                     print('Connection closed')
-#                     sys.exit()
-#                 else:
-#                     # print data
-#                     sys.stdout.write(data)
-#
-#             # user entered a message
-#             else:
-#                 msg = sys.stdin.readline()
-#                 socket.send(msg)
-
 
 if __name__ == "__main__":
     # print(network_scan("google.com", 80, 150))
     host, port = get_host_port(sys.argv)
-
     s = connect_to_remote_host(host, port)
-    command = input()
-    print(command)
-    command += "\n\n"
-    data = "GET / HTTP/1.1\nHost: google.com\n\n"
-    if data == str(command):
-        print("the same")
-    send_payload(s, "orrr", command)
-    print(receive_data(s))
+    client_input = input()
+    client_input_arr = client_input.split(" ")
+
+    if client_input_arr[0] == "telnet" and client_input_arr[1] == "upload":
+        file_path = client_input_arr[2]
+        upload_file(s, file_path)
+
+    if client_input_arr[0] == "telnet" and client_input_arr[1] == "exec":
+        command = client_input_arr[2]
+
+    # exit()
+    # print(command)
+    # # command += "\n\n"
+    # data = "GET / HTTP/1.1\r\nHost: google.com\n\n"
+    # if data == command:
+    #     print("the same")
+    # send_payload(s, "other", command)
+    # # send_payload(s, "orrr", "salam")
+    # # send_payload(s, "orrr", "chetori!?")
+    # # send_payload(s, "orrr", "DISCONNECT")
+    # print(receive_data(s))

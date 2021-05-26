@@ -1,8 +1,36 @@
 import sys, socket, select, string, os
+from CommonFunctions import *
+from time import gmtime, strftime
 
 SIZE = 1024
 ENCODING = 'utf-8'
 MESSAGE_LENGTH_SIZE = 64
+
+
+def append_new_line(file_name, text_to_append):
+    """Append given text as a new line at the end of file"""
+    # Open the file in append & read mode ('a+')
+    with open(file_name, "a+") as file_object:
+        # Move read cursor to the start of file.
+        file_object.seek(0)
+        # If file is not empty then append '\n'
+        data = file_object.read(100)
+        if len(data) > 0:
+            file_object.write("\n")
+        # Append text at the end of file
+        current_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        file_object.write("Time: {} -> client command: {}".format(current_time, text_to_append))
+
+
+def read_history_file(file_name):
+    with open(file_name, 'r') as file:
+        return file.read()
+
+
+def print_history(readed_file):
+    print("\n\n\n***** HISTOY *****")
+    print(readed_file)
+    print("******************\n\n\n")
 
 
 def get_host_port(arr):
@@ -30,16 +58,6 @@ def connect_to_remote_host(host, port):
 def close_connection(socket):
     if socket:
         socket.close()
-
-
-def send_message(client, message):
-    message = message.encode()
-    message_length = len(message)
-    message_length = str(message_length).encode()
-    message_length += b' ' * (MESSAGE_LENGTH_SIZE - len(message_length))
-
-    client.sendall(message_length)
-    client.sendall(message)
 
 
 def upload_file(client, path):
@@ -128,16 +146,15 @@ def exec_command_in_server(client, command):
     send_message(client, command)
 
 
-
 # for command "mkdir test1 test2"
 # we have ["mkdir", "test1", "test2"]
 # this function refactoring to "mkdir test1 test2"
-def refactoring_command(arr):
-    command = arr[2]
+def rejoining_segment_of_array(arr):
+    result = arr[2]
     for i in range(3, len(arr)):
-        command += " " + arr[i]
+        result += " " + arr[i]
 
-    return command
+    return result
 
 
 if __name__ == "__main__":
@@ -145,6 +162,7 @@ if __name__ == "__main__":
     host, port = get_host_port(sys.argv)
     s = connect_to_remote_host(host, port)
     client_input = input()
+    append_new_line("./history.txt", client_input)
     client_input_arr = client_input.split(" ")
     print(client_input_arr)
 
@@ -153,11 +171,19 @@ if __name__ == "__main__":
         upload_file(s, file_path)
 
     if client_input_arr[0] == "telnet" and client_input_arr[1] == "exec":
-        command = refactoring_command(client_input_arr)
+        command = rejoining_segment_of_array(client_input_arr)
         print("*********************")
         print(command)
         exec_command_in_server(s, command)
         print(receive_data2(s))
+
+    if client_input_arr[0] == "telnet" and client_input_arr[1] == "send":
+        message = rejoining_segment_of_array(client_input_arr)
+        send_message(s, message)
+
+    if client_input_arr[0] == "telnet" and client_input_arr[1] == "history":
+        history = read_history_file("./history.txt")
+        print_history(history)
 
     # exit()
     # print(command)

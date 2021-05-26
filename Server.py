@@ -43,10 +43,14 @@ def handle_client(connection, address):
         if telnet_mode == "upload":
             print("Client upload file, server is receiving ...")
             receive_file(connection, address)
+
         elif telnet_mode == "exec":
             print("Client requested execute command ...")
             exec_command(connection, address)
-            break
+
+        elif telnet_mode == "send":
+            print("Client send message to server")
+
 
 
         # print("[MESSAGE RECEIVED] {}".format(message))

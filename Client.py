@@ -97,6 +97,14 @@ def receive_data(socket):
     return chunks_arr.decode()
 
 
+def receive_data2(connection):
+    message_length = int(connection.recv(MESSAGE_LENGTH_SIZE).decode())
+    message = connection.recv(message_length).decode()
+
+    print("Client receive message from server.")
+    return message
+
+
 def network_scan(host, start_port, end_port):
     print(host)
     print(start_port, end_port)
@@ -118,15 +126,15 @@ def exec_command_in_server(client, command):
 
     # send command to server
     send_message(client, command)
-    receive_data(client)
+
 
 
 # for command "mkdir test1 test2"
 # we have ["mkdir", "test1", "test2"]
 # this function refactoring to "mkdir test1 test2"
 def refactoring_command(arr):
-    command = ""
-    for i in range(2, len(arr)):
+    command = arr[2]
+    for i in range(3, len(arr)):
         command += " " + arr[i]
 
     return command
@@ -148,7 +156,8 @@ if __name__ == "__main__":
         command = refactoring_command(client_input_arr)
         print("*********************")
         print(command)
-        exec_command_in_server(command)
+        exec_command_in_server(s, command)
+        print(receive_data2(s))
 
     # exit()
     # print(command)

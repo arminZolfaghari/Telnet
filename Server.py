@@ -1,4 +1,5 @@
 import sys, socket, select, string, os, threading, subprocess
+from Client import send_message
 
 PORT = 8877
 ENCODING = 'utf-8'
@@ -6,7 +7,6 @@ MESSAGE_LENGTH_SIZE = 64
 
 
 def receive_file(connection, address):
-
     message_length = int(connection.recv(MESSAGE_LENGTH_SIZE).decode())
     uploaded_file_name = connection.recv(message_length).decode()
 
@@ -20,14 +20,16 @@ def receive_file(connection, address):
     print("Server received file from {}".format(address))
 
 
+# execute command and sends result to client
 def exec_command(connection, address):
     message_length = int(connection.recv(MESSAGE_LENGTH_SIZE).decode())
     command = connection.recv(message_length).decode()
     print(command, type(command))
 
     result = subprocess.getoutput(command)
-
-
+    print("result_encode {}".format(result))
+    send_message(connection, result)  # server sends to client result of command
+    print("Server execute command and sends result to client")
 
 
 def handle_client(connection, address):
@@ -42,8 +44,9 @@ def handle_client(connection, address):
             print("Client upload file, server is receiving ...")
             receive_file(connection, address)
         elif telnet_mode == "exec":
-            print("Client requested execute command")
+            print("Client requested execute command ...")
             exec_command(connection, address)
+            break
 
 
         # print("[MESSAGE RECEIVED] {}".format(message))

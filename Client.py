@@ -1,6 +1,7 @@
 import sys, socket, select, string, os
 from CommonFunctions import *
 from time import gmtime, strftime
+from Database import *
 
 SIZE = 1024
 ENCODING = 'utf-8'
@@ -162,7 +163,9 @@ if __name__ == "__main__":
     host, port = get_host_port(sys.argv)
     s = connect_to_remote_host(host, port)
     client_input = input()
-    append_new_line("./history.txt", client_input)
+
+    append_new_line("./history.txt", client_input)  # append in history file
+    append_new_command_in_database(client_input)    # append in database
     client_input_arr = client_input.split(" ")
     print(client_input_arr)
 
@@ -184,6 +187,7 @@ if __name__ == "__main__":
     if client_input_arr[0] == "telnet" and client_input_arr[1] == "history":
         history = read_history_file("./history.txt")
         print_history(history)
+        # print_history_from_database()
 
     # exit()
     # print(command)

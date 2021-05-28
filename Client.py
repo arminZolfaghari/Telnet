@@ -2,6 +2,12 @@ import sys, socket, select, string, os
 from CommonFunctions import *
 from time import gmtime, strftime
 from Database import *
+from
+
+
+# for TLS connection
+from socket import create_connection
+from ssl import SSLContext, PROTOCOL_TLS_CLIENT
 
 SIZE = 1024
 ENCODING = 'utf-8'
@@ -167,6 +173,24 @@ def rejoining_segment_of_array(arr):
     return result
 
 
+def create_tls_socket(message):
+    ip = "1"
+    port = 8443
+    context = SSLContext(PROTOCOL_TLS_CLIENT)
+    context.load_verify_locations("./ssl-config/cert.pem")
+
+    with create_connection((ip, port)) as client:
+        with context.wrap_socket(client, server_hostname=hostname) as tls:
+
+            print(f'Using {tls.version()}\n')
+            tls.sendall(b'Hello, world')
+
+            data = tls.recv(1024)
+            print(f'Server says: {data}')
+
+
+
+
 if __name__ == "__main__":
     # print(network_scan("google.com", 80, 150))
     host, port = get_host_port(sys.argv)
@@ -199,6 +223,9 @@ if __name__ == "__main__":
             history = read_history_file("./history.txt")
             print_history(history)
             # print_history_from_database()
+
+        if client_input_arr[0] == "telnet" and client_input_arr[1] == "send" and client_input_arr[2] == "-e":
+
 
         if client_input_arr[0] == "telnet" and client_input_arr[1] == "exit":
             send_message(s, "exit")

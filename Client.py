@@ -42,10 +42,11 @@ def get_host_port(arr):
 
 def connect_to_remote_host(host, port):
     created_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    created_socket.settimeout(1)
+    created_socket.settimeout(200)
 
     try:
         created_socket.connect((host, port))
+        append_new_log_in_database("client", "start connection", "client connect to server.")
     except:
         print("Error: Unable to connect")
         sys.exit()
@@ -77,7 +78,11 @@ def upload_file(client, path):
         payload_length += b' ' * (MESSAGE_LENGTH_SIZE - len(payload_length))
 
         client.sendall(payload_length)
+        append_new_log_in_database(client, "payload length (for upload file)", str(payload_length))
         client.sendall(payload_encode)
+        append_new_log_in_database(client, "payload encode", str(payload_encode))
+
+        # append_new_log_in_database("client", "client upload file", payload_encode)
 
 
 def send_payload(client, payload_type, payload):
@@ -120,6 +125,8 @@ def receive_data2(connection):
     message_length = int(connection.recv(MESSAGE_LENGTH_SIZE).decode())
     message = connection.recv(message_length).decode()
 
+    append_new_log_in_database("server", "client receive from server message length", str(message_length))
+    append_new_log_in_database("server", "client receive from server message context", str(message))
     print("Client receive message from server.")
     return message
 
@@ -142,9 +149,11 @@ def exec_command_in_server(client, command):
     # to prepare server for execute command,
     # client send message "exec" before send command
     send_message(client, "exec")
+    # append_new_log_in_database("client", "client send message 'exec' to server", "exec")
 
     # send command to server
     send_message(client, command)
+    # append_new_log_in_database("client", "client send command to server", command)
 
 
 # for command "mkdir test1 test2"
@@ -162,32 +171,39 @@ if __name__ == "__main__":
     # print(network_scan("google.com", 80, 150))
     host, port = get_host_port(sys.argv)
     s = connect_to_remote_host(host, port)
-    client_input = input()
+    exit_flag = False
 
-    append_new_line("./history.txt", client_input)  # append in history file
-    append_new_command_in_database(client_input)    # append in database
-    client_input_arr = client_input.split(" ")
-    print(client_input_arr)
+    while not exit_flag:
+        client_input = input()
+        append_new_line("./history.txt", client_input)  # append in history file
+        append_new_command_in_database(client_input)  # append in database
+        client_input_arr = client_input.split(" ")
+        print(client_input_arr)
 
-    if client_input_arr[0] == "telnet" and client_input_arr[1] == "upload":
-        file_path = client_input_arr[2]
-        upload_file(s, file_path)
+        if client_input_arr[0] == "telnet" and client_input_arr[1] == "upload":
+            file_path = client_input_arr[2]
+            upload_file(s, file_path)
 
-    if client_input_arr[0] == "telnet" and client_input_arr[1] == "exec":
-        command = rejoining_segment_of_array(client_input_arr)
-        print("*********************")
-        print(command)
-        exec_command_in_server(s, command)
-        print(receive_data2(s))
+        if client_input_arr[0] == "telnet" and client_input_arr[1] == "exec":
+            command = rejoining_segment_of_array(client_input_arr)
+            print("*********************")
+            print(command)
+            exec_command_in_server(s, command)
+            print(receive_data2(s))
 
-    if client_input_arr[0] == "telnet" and client_input_arr[1] == "send":
-        message = rejoining_segment_of_array(client_input_arr)
-        send_message(s, message)
+        if client_input_arr[0] == "telnet" and client_input_arr[1] == "send":
+            message = rejoining_segment_of_array(client_input_arr)
+            send_message(s, message)
 
-    if client_input_arr[0] == "telnet" and client_input_arr[1] == "history":
-        history = read_history_file("./history.txt")
-        print_history(history)
-        # print_history_from_database()
+        if client_input_arr[0] == "telnet" and client_input_arr[1] == "history":
+            history = read_history_file("./history.txt")
+            print_history(history)
+            # print_history_from_database()
+
+        if client_input_arr[0] == "telnet" and client_input_arr[1] == "exit":
+            send_message(s, "exit")
+            exit_flag = True
+            close_connection(s)
 
     # exit()
     # print(command)

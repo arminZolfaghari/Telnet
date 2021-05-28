@@ -2,7 +2,7 @@ import sys, socket, select, string, os
 from CommonFunctions import *
 from time import gmtime, strftime
 from Database import *
-from
+
 
 
 # for TLS connection
@@ -165,28 +165,28 @@ def exec_command_in_server(client, command):
 # for command "mkdir test1 test2"
 # we have ["mkdir", "test1", "test2"]
 # this function refactoring to "mkdir test1 test2"
-def rejoining_segment_of_array(arr):
-    result = arr[2]
-    for i in range(3, len(arr)):
+def rejoining_segment_of_array(arr, start, end):
+    result = arr[start]
+    for i in range(start + 1, end):
         result += " " + arr[i]
 
     return result
 
 
-def create_tls_socket(message):
-    ip = "1"
-    port = 8443
-    context = SSLContext(PROTOCOL_TLS_CLIENT)
-    context.load_verify_locations("./ssl-config/cert.pem")
-
-    with create_connection((ip, port)) as client:
-        with context.wrap_socket(client, server_hostname=hostname) as tls:
-
-            print(f'Using {tls.version()}\n')
-            tls.sendall(b'Hello, world')
-
-            data = tls.recv(1024)
-            print(f'Server says: {data}')
+# def create_tls_socket(message):
+#     ip = "1"
+#     port = 8443
+#     context = SSLContext(PROTOCOL_TLS_CLIENT)
+#     context.load_verify_locations("./ssl-config/cert.pem")
+#
+#     with create_connection((ip, port)) as client:
+#         with context.wrap_socket(client, server_hostname=hostname) as tls:
+#
+#             print(f'Using {tls.version()}\n')
+#             tls.sendall(b'Hello, world')
+#
+#             data = tls.recv(1024)
+#             print(f'Server says: {data}')
 
 
 
@@ -209,14 +209,15 @@ if __name__ == "__main__":
             upload_file(s, file_path)
 
         if client_input_arr[0] == "telnet" and client_input_arr[1] == "exec":
-            command = rejoining_segment_of_array(client_input_arr)
+            command = rejoining_segment_of_array(client_input_arr, 2, len(client_input_arr))
             print("*********************")
             print(command)
             exec_command_in_server(s, command)
             print(receive_data2(s))
 
         if client_input_arr[0] == "telnet" and client_input_arr[1] == "send":
-            message = rejoining_segment_of_array(client_input_arr)
+            message = rejoining_segment_of_array(client_input_arr, 2, len(client_input_arr))
+            send_message(s, "send")
             send_message(s, message)
 
         if client_input_arr[0] == "telnet" and client_input_arr[1] == "history":
@@ -225,7 +226,9 @@ if __name__ == "__main__":
             # print_history_from_database()
 
         if client_input_arr[0] == "telnet" and client_input_arr[1] == "send" and client_input_arr[2] == "-e":
-
+            message = rejoining_segment_of_array(client_input_arr, 3, len(client_input_arr))
+            send_message(s, "-e")
+            send_encrypted_message(s, message)
 
         if client_input_arr[0] == "telnet" and client_input_arr[1] == "exit":
             send_message(s, "exit")

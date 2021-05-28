@@ -1,5 +1,5 @@
 import sys, socket, select, string, os, threading, subprocess
-from Client import send_message
+from CommonFunctions import *
 
 PORT = 8877
 SIZE = 1024
@@ -52,6 +52,11 @@ def handle_client(connection, address):
 
         if telnet_mode == "send":
             print("Client send message to server")
+
+        if telnet_mode == "-e":
+            decrypt_message, encrypt_message = decrypted_message(connection)
+            print("Client {} send message to server => message is encrypted: {}".format(address, encrypt_message))
+            print("decrypted message is : {}".format(decrypt_message))
 
         if telnet_mode == "exit":
             connection_status = False

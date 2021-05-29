@@ -20,7 +20,6 @@ def decrypt_message(enc_message):
 
     return decMessage
 
-
 # a = encrypt_message("aloooo")
 #
 # print("*********************")

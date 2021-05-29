@@ -3,13 +3,11 @@ from CommonFunctions import *
 from time import gmtime, strftime
 from Database import *
 
-
-
 # for TLS connection
 from socket import create_connection
 from ssl import SSLContext, PROTOCOL_TLS_CLIENT
 
-SIZE = 1024
+SIZE = 4096
 ENCODING = 'utf-8'
 MESSAGE_LENGTH_SIZE = 64
 
@@ -48,10 +46,11 @@ def get_host_port(arr):
 
 def connect_to_remote_host(host, port):
     created_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    created_socket.settimeout(200)
+    # created_socket.settimeout(2)
 
     try:
-        created_socket.connect((host, port))
+        remote_ip = socket.gethostbyname(host)
+        created_socket.connect((remote_ip, port))
         append_new_log_in_database("client", "start connection", "client connect to server.")
     except:
         print("Error: Unable to connect")
@@ -91,31 +90,9 @@ def upload_file(client, path):
         # append_new_log_in_database("client", "client upload file", payload_encode)
 
 
-def send_payload(client, payload_type, payload):
-    if payload_type == "file":
-        with open(payload, 'rb') as file:
-            data = file.read()
-            # while 1:
-            #     data_in_chunk = file.read(SIZE)
-            #     if not data_in_chunk:
-            #         break
-            #     send_payload(client, "data", data_in_chunk)
-    else:
-        print(111111111)
-        client.sendall(payload.encode())
-        # message = payload.encode()
-        # message_length = len(message)
-        # message_length = str(message_length).encode()
-        # message_length += b' ' * (MESSAGE_LENGTH_SIZE - len(message_length))
-        #
-        # print(message_length)
-        # print(message)
-        # client.sendall(message_length)
-        # client.sendall(message)
-
-
 def receive_data(socket):
     chunks_arr = bytearray()
+    print(1111)
 
     while 1:
         readable = select.select([socket], [], [], 2)
@@ -189,8 +166,6 @@ def rejoining_segment_of_array(arr, start, end):
 #             print(f'Server says: {data}')
 
 
-
-
 if __name__ == "__main__":
     # print(network_scan("google.com", 80, 150))
     host, port = get_host_port(sys.argv)
@@ -202,7 +177,6 @@ if __name__ == "__main__":
         append_new_line("./history.txt", client_input)  # append in history file
         append_new_command_in_database(client_input)  # append in database
         client_input_arr = client_input.split(" ")
-        print(client_input_arr)
 
         if client_input_arr[0] == "telnet" and client_input_arr[1] == "upload":
             file_path = client_input_arr[2]
@@ -235,14 +209,10 @@ if __name__ == "__main__":
             exit_flag = True
             close_connection(s)
 
-    # exit()
-    # print(command)
-    # # command += "\n\n"
-    # data = "GET / HTTP/1.1\r\nHost: google.com\n\n"
-    # if data == command:
-    #     print("the same")
-    # send_payload(s, "other", command)
-    # # send_payload(s, "orrr", "salam")
-    # # send_payload(s, "orrr", "chetori!?")
-    # # send_payload(s, "orrr", "DISCONNECT")
-    # print(receive_data(s))
+        if client_input == "normal telnet":
+            while True:
+                request = input()
+                request += "\r\n"
+                s.send(request.encode())
+                response = s.recv(SIZE)
+                print(response.decode())

@@ -20,10 +20,8 @@ def print_history_from_database():
 
 
 def append_new_log_in_database(sender, subject, text_to_append):
-    print("***************************")
     current_time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
     inserted_object = {"subject": subject, "data": str(text_to_append), "date": current_time}
-    print(inserted_object)
     logs_collection.insert_one(inserted_object)
 
 

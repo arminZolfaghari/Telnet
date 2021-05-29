@@ -1,6 +1,6 @@
-import sys, socket, select, string, os
+import sys, socket
 from CommonFunctions import *
-from time import gmtime, strftime
+
 from Database import *
 
 # for TLS connection
@@ -90,30 +90,6 @@ def upload_file(client, path):
         # append_new_log_in_database("client", "client upload file", payload_encode)
 
 
-def receive_data(socket):
-    chunks_arr = bytearray()
-    print(1111)
-
-    while 1:
-        readable = select.select([socket], [], [], 2)
-        if readable[0]:
-            chunks_arr.extend(socket.recv(SIZE))
-        else:
-            break
-
-    return chunks_arr.decode()
-
-
-def receive_data2(connection):
-    message_length = int(connection.recv(MESSAGE_LENGTH_SIZE).decode())
-    message = connection.recv(message_length).decode()
-
-    append_new_log_in_database("server", "client receive from server message length", str(message_length))
-    append_new_log_in_database("server", "client receive from server message context", str(message))
-    print("Client receive message from server.")
-    return message
-
-
 def network_scan(host, start_port, end_port):
     print(host)
     print(start_port, end_port)
@@ -184,10 +160,8 @@ if __name__ == "__main__":
 
         if client_input_arr[0] == "telnet" and client_input_arr[1] == "exec":
             command = rejoining_segment_of_array(client_input_arr, 2, len(client_input_arr))
-            print("*********************")
-            print(command)
             exec_command_in_server(s, command)
-            print(receive_data2(s))
+            print(receive_data(s))
 
         if client_input_arr[0] == "telnet" and client_input_arr[1] == "send":
             message = rejoining_segment_of_array(client_input_arr, 2, len(client_input_arr))

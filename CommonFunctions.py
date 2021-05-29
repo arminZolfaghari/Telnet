@@ -6,6 +6,16 @@ ENCODING = 'utf-8'
 MESSAGE_LENGTH_SIZE = 64
 
 
+def receive_data(connection):
+    message_length = int(connection.recv(MESSAGE_LENGTH_SIZE).decode())
+    message = connection.recv(message_length).decode()
+
+    append_new_log_in_database("server", "client receive from server message length", str(message_length))
+    append_new_log_in_database("server", "client receive from server message context", str(message))
+    print("Client receive message from server.")
+    return message
+
+
 def send_message(sender, message):
     message = message.encode()
     message_length = len(message)
@@ -15,7 +25,7 @@ def send_message(sender, message):
     sender.sendall(message_length)
     append_new_log_in_database(sender, "message length", str(message_length))
     sender.sendall(message)
-    append_new_log_in_database(sender, "message", message)
+    append_new_log_in_database(sender, "message (without encryption)", message)
 
 
 def send_encrypted_message(sender, message):

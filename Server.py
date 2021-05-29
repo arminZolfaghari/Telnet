@@ -1,4 +1,4 @@
-import sys, socket, select, string, os, threading, subprocess
+import socket, threading, subprocess
 from CommonFunctions import *
 
 PORT = 8877
@@ -74,9 +74,6 @@ def start_server(server):
     server.listen()
     while True:
         connection, address = server.accept()
-        print("connection server.accept")
-        print(connection)
-        print(address)
         thread = threading.Thread(target=handle_client, args=(connection, address))
         thread.start()
 

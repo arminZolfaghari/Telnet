@@ -11,4 +11,3 @@ class bcolors:
 
 
 
-print(f"{bcolors.OKBLUE}alooo{bcolors.ENDC}"f"{bcolors.BOLD}aaaaaa")

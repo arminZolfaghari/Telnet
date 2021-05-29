@@ -1,6 +1,5 @@
 import sys, socket
 from CommonFunctions import *
-
 from Database import *
 
 # for TLS connection
